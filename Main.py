@@ -51,7 +51,7 @@ def draw(draw_info, algo_name):
     controls = draw_info.FONT.render("C - Clear/ Reset | SPACE - Start Sorting", 1, draw_info.WHITE)
     draw_info.window.blit(controls, (draw_info.width/2 - controls.get_width()/2, 35))
 
-    sorting = draw_info.FONT.render("I - Insertion Sort | B - Bubble Sort | S - Selection Sort | R - Radix Sort", 1, draw_info.WHITE)
+    sorting = draw_info.FONT.render("I - Insertion Sort | B - Bubble Sort | S - Selection Sort | R - Radix Sort | M - Merge Sort | Q - Quick Sort", 1, draw_info.WHITE)
     draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 55))
 
     draw_list(draw_info)
@@ -169,11 +169,98 @@ def radixSort(draw_info):
 
     return lst
 
+def mergeSort(draw_info, lst=None):
+    if lst is None:
+        lst = draw_info.lst
+    
+    if len(lst) > 1:
+        mid = len(lst) // 2
+        left_half = lst[:mid]
+        right_half = lst[mid:]
+
+        yield from mergeSort(draw_info, left_half)
+        yield from mergeSort(draw_info, right_half)
+
+        i = j = k = 0
+
+        while i < len(left_half) and j < len(right_half):
+            if left_half[i] < right_half[j]:
+                lst[k] = left_half[i]
+                i += 1
+            else:
+                lst[k] = right_half[j]
+                j += 1
+            k += 1
+            draw_list(draw_info, {k-1: draw_info.RED}, True)
+            yield True
+
+        while i < len(left_half):
+            lst[k] = left_half[i]
+            i += 1
+            k += 1
+            draw_list(draw_info, {k-1: draw_info.RED}, True)
+            yield True
+
+        while j < len(right_half):
+            lst[k] = right_half[j]
+            j += 1
+            k += 1
+            draw_list(draw_info, {k-1: draw_info.RED}, True)
+            yield True
+
+    return lst
+
+def quickSort(draw_info, lst=None, low=None, high=None):
+    def partition(draw_info, lst, low, high):
+        pivot = lst[high]
+        i = low - 1
+
+        for j in range(low, high):
+            if lst[j] < pivot:
+                i += 1
+                lst[i], lst[j] = lst[j], lst[i]
+                draw_list(draw_info, {i: draw_info.RED, j: draw_info.BLUE}, True)
+
+        lst[i+1], lst[high] = lst[high], lst[i+1]
+        draw_list(draw_info, {i+1: draw_info.RED, high: draw_info.BLUE}, True)
+
+        return i+1
+    if lst is None:
+        lst = draw_info.lst
+    if low is None:
+        low = 0
+    if high is None:
+        high = len(lst) - 1
+    
+    if low < high:
+        pivot = partition(draw_info, lst, low, high)
+        quickSort(draw_info, lst, low, pivot - 1)
+        quickSort(draw_info, lst, pivot + 1, high)
+
+    return lst
+
+
+def partition(draw_info, lst, low, high):
+    pivot = lst[high]
+    i = low - 1
+
+    for j in range(low, high):
+        if lst[j] < pivot:
+            i += 1
+            lst[i], lst[j] = lst[j], lst[i]
+            draw_list(draw_info, {i: draw_info.RED, j: draw_info.BLUE}, True)
+
+    lst[i+1], lst[high] = lst[high], lst[i+1]
+    draw_list(draw_info, {i+1: draw_info.RED, high: draw_info.BLUE}, True)
+
+    return i+1
+
+
 def main():
     run = True
     clock = pygame.time.Clock()
 
-    n = 500
+    n = 100
     min_val = 0
     max_val = 200
 
@@ -226,6 +313,12 @@ def main():
             elif event.key == pygame.K_r and sorting == False:
                 sorting_algorithm = radixSort
                 sorting_algorithm_name = "Radix Sort"
+            elif event.key == pygame.K_m and sorting == False:
+                sorting_algorithm = mergeSort
+                sorting_algorithm_name = "Merge Sort"
+            elif event.key == pygame.K_q and sorting == False:
+                sorting_algorithm = quickSort
+                sorting_algorithm_name = "Quick Sort"
 
 
     pygame.quit()
